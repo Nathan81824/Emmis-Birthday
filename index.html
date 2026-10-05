@@ -17,7 +17,7 @@ h1{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);m
 .cover:focus-visible{outline:4px solid var(--pink);outline-offset:-8px}
 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 </style></head><body>
-<video id="v" playsinline loop preload="auto" src="grok-video-f012dcce-60ba-41ea-944b-1dc25f7043e9.mp4"></video>
+<video id="v" playsinline preload="auto" src="grok-video-f012dcce-60ba-41ea-944b-1dc25f7043e9.mp4"></video>
 <h1>Happy Birthday!</h1>
 <button class="cover" id="c" aria-label="Tap to play"><b>Happy Birthday!</b><span>🎁</span><i>Tap to open. Warning: you might laugh 😂</i></button>
 <canvas id="cv"></canvas>
@@ -31,5 +31,17 @@ if(!run){run=true;tick()}}
 function tick(){x.clearRect(0,0,cv.width,cv.height);
 P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore()});
 P=P.filter(p=>p.y<innerHeight+20);if(P.length)requestAnimationFrame(tick);else run=false}
-c.onclick=()=>{c.remove();v.play();boom();setInterval(boom,3000)};
+
+/* birthday song, made by the browser (no file needed) */
+const S=[[392,.75],[392,.25],[440,1],[392,1],[523,1],[494,2],[392,.75],[392,.25],[440,1],[392,1],[587,1],[523,2],
+[392,.75],[392,.25],[784,1],[659,1],[523,1],[494,1],[440,1],[698,.75],[698,.25],[659,1],[523,1],[587,1],[523,2]];
+const BEAT=.42,SONG_LEN=S.reduce((a,n)=>a+n[1],0)*BEAT;
+let ac;
+function song(){ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();let t=ac.currentTime+.05;
+S.forEach(([f,b])=>{const o=ac.createOscillator(),g=ac.createGain(),d=b*BEAT;o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.3,t+.03);g.gain.exponentialRampToValueAtTime(.001,t+d-.02);o.start(t);o.stop(t+d);t+=d})}
+
+/* video plays, then pauses, the song plays, then the video continues */
+c.onclick=()=>{c.remove();ac=ac||new(window.AudioContext||window.webkitAudioContext)();v.play();boom();setInterval(boom,3000)};
+v.onended=()=>{v.pause();boom();song();setTimeout(()=>{v.currentTime=0;v.play()},SONG_LEN*1000+600)};
 </script></body></html>
